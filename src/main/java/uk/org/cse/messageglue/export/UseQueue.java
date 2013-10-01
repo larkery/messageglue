@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Bind a method so the bridged class reads directly from a named queue
+ * Bind a method so that served classes read directly from some named queue
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})

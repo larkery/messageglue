@@ -20,7 +20,13 @@ public interface IMessageGlue {
 	 */
 	public <T> T implement(final Class<T> clazz);
 
+	/**
+	 * Start serving all bound instances
+	 */
 	public void start();
 
+	/**
+	 * Stop serving anything
+	 */
 	public void stop();
 }
