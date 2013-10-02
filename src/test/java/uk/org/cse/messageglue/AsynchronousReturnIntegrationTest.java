@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-public class AsynchronousIntegrationTest {
+public class AsynchronousReturnIntegrationTest {
 	private static final String Q = "q";
 	
 	@Test
