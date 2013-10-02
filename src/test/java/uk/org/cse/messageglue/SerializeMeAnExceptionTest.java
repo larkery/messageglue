@@ -9,9 +9,9 @@ import uk.org.cse.messageglue.Msg;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class SerializeMeAnException {
+public class SerializeMeAnExceptionTest {
 	@Test
-	public void go() throws IOException {
+	public void exceptionsPreserveTheirType() throws IOException {
 		final ObjectMapper om = new ObjectMapper();
 		
 		final Msg.Error e = new Msg.Error("test", new RuntimeException("blam"));
