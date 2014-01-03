@@ -16,6 +16,7 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import uk.org.cse.messageglue.export.IDirectAccess;
 
 /**
  * This is the server which binds a method to the messaging system
@@ -31,16 +32,16 @@ class MethodServer<MT, IT> extends DefaultConsumer {
 	private final Method method;
 	private final ObjectMapper mapper;
 	private final Provider<Channel> channels;
-	
-	private String privateQueue;
+	private final IDirectAccess direct;
+
 	private String myTag;
 	
-	public MethodServer(
-			final IErrorHandler errorHandler,
-			final ObjectMapper mapper,
-			final Provider<Channel> channels,
-			final Method method,
-			final IT target) {
+	public MethodServer(final IErrorHandler errorHandler,
+						final ObjectMapper mapper,
+						final Provider<Channel> channels,
+						final Method method,
+						final IT target,
+						final IDirectAccess direct) {
 		super(channels.get());
 		this.errorHandler = errorHandler;
 		this.mapper = mapper;
@@ -48,15 +49,16 @@ class MethodServer<MT, IT> extends DefaultConsumer {
 		this.method = method;
 		this.target = target;
 		this.model = Model.of(method);
+		this.direct = direct;
 	}
 	
 	public void start() {
 		try {
+			final String privateQueue;
 			if (model.isFromNamedQueue()) {
-				myTag = getChannel().basicConsume(
-						model.getNamedQueue(), 
-						true, 
-						this);
+				privateQueue = model.getNamedQueue();
+			} else if (model.isFromSharedAnonymousQueue()) {
+				privateQueue = direct.getAnonymousQueue(model.getNamedQueue());
 			} else {
 				privateQueue = getChannel().queueDeclare().getQueue();
 				
@@ -64,12 +66,12 @@ class MethodServer<MT, IT> extends DefaultConsumer {
 						privateQueue, 
 						model.getSubmissionExchange(), 
 						model.getSubmissionRoutingKey());
-				
-				myTag = getChannel().basicConsume(
-						privateQueue, 
-						true,
-						this);
 			}
+
+			myTag = getChannel().basicConsume(privateQueue, 
+											  true,
+											  this);
+
 		} catch (final IOException e) {
 			
 		}
@@ -79,10 +81,10 @@ class MethodServer<MT, IT> extends DefaultConsumer {
 		if (myTag != null) {
 			try {
 				getChannel().basicCancel(myTag);
-			} catch (IOException ex) {}
+			} catch (final IOException ex) {}
 			try {
 				getChannel().close();
-			} catch (IOException ex) {}
+			} catch (final IOException ex) {}
 			myTag = null;
 		}
 	}
@@ -167,7 +169,7 @@ class MethodServer<MT, IT> extends DefaultConsumer {
 		}
 	}
 
-	private static <T> Sink<T> createSink(final ObjectMapper mapper, final Channel requestChannel, Output<T> out, final String destination, int index) {
+	private static <T> Sink<T> createSink(final ObjectMapper mapper, final Channel requestChannel, final Output<T> out, final String destination, final int index) {
 		return new Sink<>(requestChannel, mapper, out.getMessageType(), destination, index);
 	}
 }

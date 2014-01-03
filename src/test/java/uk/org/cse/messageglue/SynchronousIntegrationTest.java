@@ -110,7 +110,6 @@ public class SynchronousIntegrationTest {
 			 queues=@Queue(value=Q, bindings=@QueueBinding(E)))
 	public interface IStringProcessor {
 		@UseQueue(Q)
-		@UseExchange(E)
 		@Timeout
 		public String process(
 				final String in) throws TimeoutException;

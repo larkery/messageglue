@@ -19,10 +19,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 
 class Model<MT> {
+	enum QueueType {
+		Named,
+		Identified,
+		Anonymous
+	}
+
 	private final String submissionExchange;
 	private final String submissionRoutingKey;
 	private final String namedQueue;
-	private final boolean fromNamedQueue;
+	private final QueueType queueType;
 	
 	private final Optional<Output<?>> directOutput;
 	
@@ -39,6 +45,7 @@ class Model<MT> {
 			final String submissionExchange, 
 			final String submissionRoutingKey,
 			final String namedQueue,
+			final QueueType queueType,
 			final Optional<Output<?>> directOutput, 
 			final Optional<Long> timeout,
 			final Optional<Integer> multiMaximum,
@@ -46,7 +53,7 @@ class Model<MT> {
 		super();
 		this.timeout = timeout;
 		this.multiMaximum = multiMaximum;
-		this.fromNamedQueue = namedQueue != null;
+		this.queueType = queueType;
 		this.messageType = messageType;
 		this.submissionExchange = submissionExchange;
 		this.submissionRoutingKey = submissionRoutingKey;
@@ -66,9 +73,13 @@ class Model<MT> {
 	public String getNamedQueue() {
 		return namedQueue;
 	}
+
+	public boolean isFromSharedAnonymousQueue() {
+		return queueType == QueueType.Identified;
+	}
 	
 	public boolean isFromNamedQueue() {
-		return fromNamedQueue;
+		return queueType == QueueType.Named;
 	}
 	
 	public Optional<Output<?>> getDirectOutput() {
@@ -210,7 +221,8 @@ class Model<MT> {
 				(Class<MT>) messageType, 
 				submissionExchange, 
 				submissionRoutingKey, 
-				fq == null ? null : fq.value(),
+				(fq == null) ? null : fq.value(),
+				(fe == null ? QueueType.Named : (fq == null ? QueueType.Anonymous : QueueType.Identified)),
 				Optional.<Output<?>>fromNullable(directOutput), 
 				Optional.fromNullable(timeoutLong),
 				multimax,

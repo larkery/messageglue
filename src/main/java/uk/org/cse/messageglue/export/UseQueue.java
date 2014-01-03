@@ -12,7 +12,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface UseQueue {
 	/**
-	 * @return the queue name
+	 * @return the queue name - this can be an anonymous queue's name (see {@link Queue}),
+	 * but in that case you also want {@link UseExchange} or nobody will be able to publish
+	 * to you.
 	 */
 	public String value();
 }
